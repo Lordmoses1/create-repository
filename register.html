@@ -1,171 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - Socialboost</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <title>Register</title>
+  <style>
+    /* (Your existing CSS styling) */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+    }
+    form {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    label { display: block; margin: 10px 0 5px; }
+    input, select, button {
+      width: 100%; padding: 10px; margin-bottom: 10px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    .password-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+    }
+    button {
+      background-color: #3498db;
+      color: #fff; font-size: 1rem;
+      border: none; cursor: pointer; transition: 0.3s;
+    }
+    button:hover { background-color: #2980b9; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Register to Socialboost</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="login.html">Login</a>
-    </nav>
-  </header>
+  <form id="testForm">
+    <label for="firstName">First Name</label>
+    <input type="text" id="firstName" name="firstName" required>
 
-  <main>
-    <form action="/user/register" method="POST" enctype="multipart/form-data">
-      <label for="firstName">First Name</label>
-      <input type="text" id="firstName" name="firstName" required>
+    <label for="lastName">Last Name</label>
+    <input type="text" id="lastName" name="lastName" required>
 
-      <label for="lastName">Last Name</label>
-      <input type="text" id="lastName" name="lastName" required>
+    <label for="email">Email Address</label>
+    <input type="email" id="email" name="email" required>
 
-      <label for="email">Email Address</label>
-      <input type="email" id="email" name="email" required>
+    <label for="phone">Phone Number</label>
+    <input type="tel" id="phone" name="phone" pattern="^\d{10,}$" required 
+           placeholder="Enter at least 10 digits">
 
-      <label for="phone">Phone Number</label>
-      <input type="tel" id="phone" name="phone" required>
+    <label for="password">Password</label>
+    <div class="password-container">
+      <input type="password" id="password" name="password" required>
+      <span class="toggle-password" data-toggle="password">&#128065;</span>
+    </div>
 
-      <label for="gender">Gender</label>
-      <select id="gender" name="gender">
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-      </select>
+    <label for="confirmPassword">Confirm Password</label>
+    <div class="password-container">
+      <input type="password" id="confirmPassword" name="confirmPassword" required>
+      <span class="toggle-password" data-toggle="confirmPassword">&#128065;</span>
+    </div>
 
-      <label for="profilePic">Profile Photo</label>
-      <input type="file" id="profilePic" name="profilePic" accept="image/*" required>
+    <label for="gender">Gender</label>
+    <select id="gender" name="gender">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    
+    <label for="profilePic">Profile Picture</label>
+    <input type="file" id="profilePic" name="profilePic" accept="image/*" required>
 
-      <button type="submit">Register</button>
-    </form>
-  </main>
+    <button type="submit">Register</button>
+  </form>
 
-  <footer>
-    <p>© 2025 Socialboost. All rights reserved.</p>
-  </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, createUserWithEmailAndPassword,
+      signOut, sendEmailVerification
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
+
+    // 🔧 Firebase configuration (replace with your own project's config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuAfRuC07-hXBRsHvoPq6riAD7ZcZiYBg",
+      authDomain: "social-boost-95374.firebaseapp.com",
+      projectId: "social-boost-95374",
+      storageBucket: "social-boost-95374.appspot.com",
+      messagingSenderId: "122872714299",
+      appId: "1:122872714299:web:769f24f8a54ec810f8381e"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // 👁️ Show/hide password fields
+    document.querySelectorAll(".toggle-password").forEach(elem => {
+      elem.addEventListener("click", () => {
+        const targetId = elem.getAttribute("data-toggle");
+        const input = document.getElementById(targetId);
+        input.type = input.type === "password" ? "text" : "password";
+      });
+    });
+
+    // 📤 Handle form submission
+    document.getElementById("testForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = document.querySelector("button[type='submit']");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Registering...";
+
+      // Gather form data
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const gender = document.getElementById("gender").value;
+      const file = document.getElementById("profilePic").files[0];
+
+      // Ensure passwords match
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Register";
+        return;
+      }
+
+      try {
+        // 🔐 Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // ⏩ Configure email verification to redirect to home.html after verification
+        const actionCodeSettings = {
+          // URL you want to redirect to after email is verified
+          url: window.location.origin + "/home.html"
+        };
+        await sendEmailVerification(user, actionCodeSettings);
+        alert("Verification email sent. Please check your inbox and click the link to verify.");
+
+        // 📷 Upload profile picture to Firebase Storage
+        let photoURL = null;
+        if (file) {
+          // Create a unique filename and upload
+          const imageName = Date.now() + "_" + file.name;
+          const storageRef = ref(storage, "profile_pictures/" + imageName);
+          await uploadBytes(storageRef, file);
+          photoURL = await getDownloadURL(storageRef);
+        }
+
+        // 📝 Save user details to Firestore
+        await addDoc(collection(db, "users"), {
+          uid: user.uid,
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          gender: gender,
+          photoURL: photoURL,     // URL of uploaded profile picture (if any)
+          createdAt: new Date()
+        });
+
+        alert("Registration successful! Verification email sent to " + email + ".");
+        document.getElementById("testForm").reset();
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Register";
+
+        // 🔒 Sign out the user until they verify their email
+        await signOut(auth);
+
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert("Registration failed: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Register";
+      }
+    });
+  </script>
 </body>
 </html>
-
-<style>
-    /* Reset */
-body, h1, p, a, input, button, select, label {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Body Styling */
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: #f4f4f9;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* Header */
-header {
-  background-color: #2c3e50;
-  color: #fff;
-  padding: 1rem;
-  text-align: center;
-}
-
-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-header nav a {
-  color: #fff;
-  text-decoration: none;
-  margin: 0 1rem;
-  font-weight: bold;
-}
-
-header nav a:hover {
-  text-decoration: underline;
-}
-
-/* Main Section */
-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-}
-
-form {
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  width: 100%;
-  max-width: 500px;
-  text-align: left;
-}
-
-form label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-}
-
-form input, form select, form button {
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-form input:focus, form select:focus {
-  border-color: #3498db;
-  outline: none;
-}
-
-form button {
-  background-color: #3498db;
-  color: #fff;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-form button:hover {
-  background-color: #2980b9;
-}
-
-form input[type="file"] {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-}
-
-form select {
-  background-color: #fff;
-}
-
-form a {
-  color: #3498db;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-form a:hover {
-  text-decoration: underline;
-}
-
-/* Footer */
-footer {
-  background-color: #2c3e50;
-  color: #fff;
-  text-align: center;
-  padding: 1rem;
-  font-size: 0.9rem;
-}
-</style>
