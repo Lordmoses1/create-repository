@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyPlatform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1 class="logo">MyPlatform</h1>
+    <ul>
+      <li><a href="task.html">Tasks</a></li>
+      <li><a href="#services">Services</a></li>
+    </ul>
+  </nav>
+
+  <!-- Services Section -->
+  <section id="services">
+    <h2>Order Social Media Boost</h2>
+    <form id="boost-form">
+      <!-- Choose Action -->
+      <label for="action">Action:</label>
+      <select id="action">
+        <option value="like">Like</option>
+        <option value="follow">Follow</option>
+        <option value="comment">Comment</option>
+      </select>
+      <br><br>
+
+      <!-- Choose Platform -->
+      <label for="platform">Platform:</label>
+      <select id="platform">
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+        <option value="tiktok">TikTok</option>
+        <option value="twitter">Twitter</option>
+      </select>
+      <br><br>
+
+      <!-- Enter Quantity -->
+      <label for="quantity">Enter Quantity:</label>
+      <input type="number" id="quantity" placeholder="Enter quantity" min="0">
+      <br><br>
+
+      <!-- Optional Comments Input -->
+      <div id="comments-section" style="display: none;">
+        <label for="comments">Enter Comments (one per line):</label>
+        <textarea id="comments" placeholder="Enter your comments here" rows="5"></textarea>
+      </div>
+      <br>
+
+      <p>Total Amount: <strong><span id="totalAmount">0</span></strong> Naira</p>
+<p>
+    <!-- Social Media Link -->
+    <label for="link">Social Media Link:</label>
+    <input type="url" id="link" placeholder="Enter social media post link" required>
+    
+</p>
+      <button type="submit">Submit</button>
+    </form>
+  </section>
+  
+  
+
+  <script>
+    const actionSelect = document.getElementById('action');
+    const quantityInput = document.getElementById('quantity');
+    const commentsSection = document.getElementById('comments-section');
+    const totalAmountSpan = document.getElementById('totalAmount');
+
+    const prices = {
+      like: 5, // Price per like
+      follow: 5, // Price per follow
+      comment: 12, // Price per comment
+    };
+
+    // Update form dynamically based on action selection
+    actionSelect.addEventListener('change', function () {
+      const action = this.value;
+
+      // Show or hide the comments section
+      if (action === 'comment') {
+        commentsSection.style.display = 'block';
+      } else {
+        commentsSection.style.display = 'none';
+      }
+
+      // Recalculate the total amount
+      calculateTotal();
+    });
+
+    // Calculate and display the total amount in real-time
+    quantityInput.addEventListener('input', calculateTotal);
+
+    function calculateTotal() {
+      const action = actionSelect.value;
+      const quantity = parseInt(quantityInput.value);
+
+      // Check if quantity is a valid number
+      if (!isNaN(quantity) && quantity >= 0) {
+        const pricePerUnit = prices[action];
+        const totalAmount = quantity * pricePerUnit; // Calculate total amount
+        totalAmountSpan.textContent = totalAmount; // Display total amount
+      } else {
+        totalAmountSpan.textContent = 0; // Default to 0 if invalid input
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar {
+      background-color: #333;
+      color: white;
+      padding: 1rem;
+    }
+
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .navbar li a {
+      color: white;
+      text-decoration: none;
+    }
+
+    section {
+      padding: 2rem;
+    }
+
+    form {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</body>
+</html>
